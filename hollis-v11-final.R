@@ -934,7 +934,7 @@ system.time({
     auc = auc_levels,
     baseline = baseline_levels
   ) %>%
-    mutate(
+    dplyr::mutate(
       simulations = future_pmap(
         list(auc, baseline),
         simulate_rba_classification,
@@ -950,8 +950,8 @@ saveRDS(sensitivity_rba_class, "sensitivity_rba_class.rds")
 # Analysis and visualization
 sensitivity_results_rba_class <- sensitivity_rba_class %>% 
   unnest(simulations) %>% 
-  group_by(auc, baseline) %>% 
-  summarise(
+  dplyr::group_by(auc, baseline) %>% 
+  dplyr::summarise(
     across(c(naive, corrected), 
            list(mean = ~mean(.x, na.rm = TRUE), 
                 sd = ~sd(.x, na.rm = TRUE), 
@@ -959,7 +959,7 @@ sensitivity_results_rba_class <- sensitivity_rba_class %>%
                 ci_high = ~quantile(.x, 0.975, na.rm = TRUE))),
     .groups = "drop"
   ) %>% 
-  mutate(
+  dplyr::mutate(
     absolute_bias = naive_mean - corrected_mean,
     relative_bias = absolute_bias / naive_mean,
     risk_ratio = naive_mean / corrected_mean,
@@ -976,7 +976,7 @@ sensitivity_results_rba_class <- sensitivity_rba_class %>%
 
 # Print formatted results
 sensitivity_results_rba_class %>% 
-  mutate(across(where(is.numeric), ~round(., 3))) %>% 
+  dplyr::mutate(across(where(is.numeric), ~round(., 3))) %>% 
   print(n = Inf, width = Inf)
 
 # Save results to a file for transfer to MS Word

@@ -1,6 +1,10 @@
 # rba-analysis
 Monte carlo analysis of the risk score analysis methodology.
 
+## Files:
+hollis-v11-final.R: this is the code file for the RSA/RBA Monte Carlo simulations (relevant to Elliott & Walton, in press).
+eo-exploration-final.R: this is the code for the additional explorations of the baseline effect of error on calibration (relevant to Elliott, submitted). 
+
 ## Notes:  
 While the code was designed by the authors (IE and JW), we notify readers/users that we used AI to aid in converting some longer, high-computation tidyverse functions into more effecient vectorised functions.  
 The nature and objectives of those functions remained as we intended, AI just helped us edit the code in a manner than allowed functions to run in minutes rather than hours!  

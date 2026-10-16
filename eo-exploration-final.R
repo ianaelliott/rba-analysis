@@ -2,27 +2,21 @@
 ## EO INDEX EXPLORATION v1 ##
 #------------------------------------------------------------------------------#
 
-library(epitools)
-library(furrr)
-library(pwr)
-library(effectsize)
-library(tidyr)
-library(data.table)
-library(future.apply)
-library(future)
+library(stats)
 library(ggpubr)
 library(tidyverse)
 
-rm(list=ls()) # Clear environment
+# Set the back-end
+#rm(list=ls()) # Clear environment
 options(scipen = 999) # Disable scientific notation
-
-seed1 <- 6012021  # Alfie
-seed2 <- 3222023  # Beya
-seed3 <- 9061991  # Bizzle
+seed1 <- 6012021
+seed2 <- 3222023
+seed3 <- 9061991
 
 # Set the parameters
 base_rates <- seq(0.05, 0.85, by = 0.05)
 err_rate   <- 0.15   # held constant
+n <- 12000
 
 # Apply the base rates
 eo <- sapply(base_rates, function(b) {
@@ -33,10 +27,9 @@ eo <- sapply(base_rates, function(b) {
   sum(score) / sum(obs_e)
 })
 
-# Bootstrapped version
-set.seed(seed1)
+# Bootstrap the EO function
 n_boot <- 2000
-
+set.seed(seed1)
 boot_curve <- lapply(base_rates, function(b) {
   score <- rbeta(n, b * 10, (1 - b) * 10)
   obs   <- rbinom(n, 1, score)
@@ -47,6 +40,7 @@ boot_curve <- lapply(base_rates, function(b) {
   })
 })
 
+# Collate the outcomes
 boot_summary <- do.call(rbind, lapply(seq_along(base_rates), function(i) {
   x <- boot_curve[[i]]
   data.frame(base_rate = base_rates[i],
@@ -56,8 +50,8 @@ boot_summary <- do.call(rbind, lapply(seq_along(base_rates), function(i) {
 }))
 print(boot_summary, row.names = FALSE)
 
-# ggplot version
-ggplot(boot_summary, 
+# Plot the EO effect
+eo_effect_plot <- ggplot(boot_summary, 
        aes(base_rate, eo)) +
   geom_point() +
   geom_line() +
@@ -66,11 +60,10 @@ ggplot(boot_summary,
   labs(x = "Base rate", y = "Expected/Observed Index", 
        title = "Bootstrapped EO Indices at various base rates (Error rate = 0.15)") +
   theme_bw()
+print(eo_effect_plot)
 
 # Brier version
 set.seed(seed3)
-n_boot <- 2000
-
 boot_brier <- lapply(base_rates, function(b) {
   score <- rbeta(n, b * 10, (1 - b) * 10)
   obs   <- rbinom(n, 1, score)
@@ -89,7 +82,7 @@ boot_brier <- lapply(base_rates, function(b) {
 boot_brier <- do.call(rbind, boot_brier)
 print(boot_brier, row.names = FALSE)
 
-# ggplot version
+# Plot the Brier effect
 brier_effect_plot <- ggplot(boot_brier, aes(base_rate)) +
   geom_ribbon(aes(ymin = cal_lwr, ymax = cal_upr), alpha = 0.15, fill = "darkred") +
   geom_ribbon(aes(ymin = err_lwr, ymax = err_upr), alpha = 0.20, fill = "steelblue") +
@@ -99,6 +92,7 @@ brier_effect_plot <- ggplot(boot_brier, aes(base_rate)) +
   geom_point(aes(y = brier_err), colour = "steelblue") +
   labs(x = "Base rate", y = "Brier score") +
   theme_bw()
+print(brier_effect_plot)
 
 brier_effect_plot2 <- ggplot(boot_brier, aes(base_rate)) +
   geom_ribbon(aes(ymin = cal_lwr, ymax = cal_upr, fill = "Calibrated"), alpha = 0.15) +
@@ -115,8 +109,9 @@ brier_effect_plot2 <- ggplot(boot_brier, aes(base_rate)) +
   labs(x = "Base rate", y = "Brier score") +
   theme_bw() +
   theme(legend.position = "top")
+print(brier_effect_plot2)
 
-# The delta
+# Calculate and plot the delta
 boot_brier$gap <- boot_brier$brier_err - boot_brier$brier_cal
 brier_delta_plot <- ggplot(boot_brier, aes(base_rate, gap)) +
   geom_line() +
@@ -124,7 +119,7 @@ brier_delta_plot <- ggplot(boot_brier, aes(base_rate, gap)) +
   labs(x = "Base rate", y = "Brier inflation from error",
        title = "Delta: Calibrated vs. Error-injected") +
   theme_bw()
-
+print(brier_delta_plot)
 ggarrange(brier_effect_plot2, brier_delta_plot)
 
 ## END ##
